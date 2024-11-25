@@ -1,6 +1,7 @@
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <errno.h>
 #include "CatFlags.h"
 
 typedef struct {
@@ -65,6 +66,21 @@ void CatFile(FILE *file, Flags flags, const char *table[256]) {
     }
 }
 
+void Cat (int arge, char *argv[], Flags flags, const char *table[static 256]) {
+    for (char **filename = &argv[1], **end = &argv[arge]; filename != end; ++filename) {
+        if (**filename == '-')
+        continue;
+    FILE *file = fopen(*filename, "rb");
+        if (errno) {
+            fprintf(stderr, "%s", argv[0]);
+            perror(filename);
+            continue;
+        }
+        CatFile(file, flags, table);
+        fclose(file);
+    }
+}
+
 int main(int argc, char *argv[]) {
     Flags flags = CatReadFlags(argc, argv);
     const char *table[256] = {0};
@@ -86,6 +102,6 @@ int main(int argc, char *argv[]) {
         CatSetNonPrintable(table);
     if (flags.squeeze)
         printf("squeeze\n");
-    CatFile(stdin, flags, table);
+    Cat(argc, argv, flags, table);
     return 0;
 }
