@@ -43,23 +43,32 @@ void CatFile(FILE *file, Flags flags, const char *table[256]) {
     int c = 0;
     int lineno = 0;
     int last;
+    bool squeeze = false;
     last = '\n';
     (void)flags;
     while ((c = fgetc(file)) != EOF) {
         if (last == '\n') {
-            if (flags.squeeze && c == '\n')
+            if (flags.squeeze && c == '\n') {
+                if (squeeze)
                 continue;
+            squeeze = true;
+            }
+            else
+                squeeze = false;
         
             if (flags.numberAll) {
-                printf("%6i  ", ++lineno);
+                printf("%6i\t", ++lineno);
             }
             else if (flags.numberNonBlank) {
                 if (c != '\n')
-                    printf("%6i  ", ++lineno);
+                    printf("%6i\t", ++lineno);
             }
         }
+        if (!*table[c])
+            printf("%c", '\0');
+        else    
             printf("%s", table[c]);
-            last = c;
+        last = c;
         // else {
         //     putchar(c); // Если нет преобразования, выводим символ
         // }
@@ -89,19 +98,23 @@ int main(int argc, char *argv[]) {
     if (flags.markEndl) {
         CatSetEndl(table);
     }
-    if (flags.numberAll) {
-        printf ("number All Lines\n");
-    }
-    if (flags.numberNonBlank) {
-        printf ("number Non Blank\n");
-    }
+    // if (flags.numberAll) {
+    //     printf ("number All Lines\n");
+    // }
+    // if (flags.numberNonBlank) {
+    //     printf ("number Non Blank\n");
+    // }
     if (flags.tab) {
         CatSetTab(table);
     }
     if (flags.printNonPrintable)
         CatSetNonPrintable(table);
-    if (flags.squeeze)
-        printf("squeeze\n");
+    // if (flags.squeeze)
+    //     printf("squeeze\n");
+
+
+
     Cat(argc, argv, flags, table);
+    //CatFile(stdin, flags, table);
     return 0;
 }
